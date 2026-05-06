@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Face Swap Job {{ job.id }}</title>
+    <style>
+        :root {
+            --bg: #edf1ec;
+            --surface: #fffdf6;
+            --ink: #17211d;
+            --muted: #69746f;
+            --line: rgba(23, 33, 29, 0.13);
+            --accent: #0f6b5c;
+            --accent-dark: #0a433a;
+            --warn: #a85d12;
+            --danger: #a61b3d;
+            --shadow: 0 24px 64px rgba(17, 31, 26, 0.11);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at 15% 3%, rgba(200, 121, 34, 0.22), transparent 26rem),
+                radial-gradient(circle at 90% 18%, rgba(15, 107, 92, 0.2), transparent 30rem),
+                linear-gradient(135deg, #f8f2e6 0%, var(--bg) 62%, #e5eee9 100%);
+        }
+
+        .wrap {
+            width: min(1220px, calc(100% - 32px));
+            margin: 28px auto 44px;
+            display: grid;
+            gap: 22px;
+        }
+
+        .hero,
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 30px;
+            background: rgba(255, 253, 246, 0.9);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(14px);
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 24px;
+            align-items: center;
+            padding: clamp(22px, 4vw, 38px);
+        }
+
+        .back {
+            color: var(--accent-dark);
+            font-weight: 900;
+            text-decoration: none;
+        }
+
+        h1,
+        h2 {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            letter-spacing: -0.04em;
+        }
+
+        h1 {
+            margin-top: 14px;
+            font-size: clamp(2.2rem, 5vw, 5rem);
+            line-height: 0.9;
+        }
+
+        h2 {
+            font-size: clamp(1.35rem, 2vw, 2rem);
+        }
+
+        .meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .pill {
+            width: fit-content;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.7);
+            color: var(--muted);
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+
+        .status {
+            color: var(--accent-dark);
+            background: rgba(15, 107, 92, 0.12);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.78rem;
+        }
+
+        .status.failed {
+            color: var(--danger);
+            background: rgba(166, 27, 61, 0.1);
+        }
+
+        .status.pending,
+        .status.processing {
+            color: var(--warn);
+            background: rgba(168, 93, 18, 0.12);
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: end;
+            gap: 12px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 46px;
+            padding: 0 18px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            color: #fff;
+            font-weight: 900;
+            text-decoration: none;
+            box-shadow: 0 14px 28px rgba(15, 107, 92, 0.2);
+        }
+
+        .button.secondary {
+            color: var(--accent-dark);
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid var(--line);
+            box-shadow: none;
+        }
+
+        .notice,
+        .error {
+            padding: 14px 16px;
+            border-radius: 18px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .error {
+            color: var(--danger);
+            border-color: rgba(166, 27, 61, 0.22);
+            background: rgba(166, 27, 61, 0.07);
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .card {
+            padding: 18px;
+        }
+
+        .image-frame {
+            display: grid;
+            place-items: center;
+            min-height: 280px;
+            margin-top: 14px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background:
+                linear-gradient(135deg, rgba(15, 107, 92, 0.06), rgba(200, 121, 34, 0.06)),
+                #fff;
+        }
+
+        img {
+            width: 100%;
+            height: 100%;
+            max-height: 560px;
+            display: block;
+            object-fit: contain;
+        }
+
+        .placeholder {
+            padding: 24px;
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.55;
+        }
+
+        .compare-card {
+            padding: clamp(18px, 3vw, 26px);
+        }
+
+        .compare-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .compare {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 26px;
+            background: #fff;
+            min-height: 360px;
+            --split: 50%;
+        }
+
+        .compare img {
+            width: 100%;
+            height: min(68vh, 720px);
+            object-fit: contain;
+            background: #fff;
+        }
+
+        .compare-output {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            clip-path: inset(0 calc(100% - var(--split)) 0 0);
+        }
+
+        .compare-output img {
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            object-fit: contain;
+        }
+
+        .compare::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: var(--split);
+            width: 3px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 22px rgba(17, 31, 26, 0.24);
+            transform: translateX(-1px);
+            pointer-events: none;
+        }
+
+        .compare-range {
+            width: 100%;
+            margin-top: 14px;
+            accent-color: var(--accent);
+        }
+
+        .compare-labels {
+            position: absolute;
+            inset: 14px 14px auto;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .compare-labels span {
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: rgba(23, 33, 29, 0.72);
+            color: #fff;
+            font-size: 0.78rem;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 940px) {
+            .hero,
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                justify-content: start;
+            }
+
+            .compare-head {
+                display: grid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="wrap">
+        <section class="hero">
+            <div>
+                <a class="back" href="{% url 'faceswap:home' %}">Back to upload</a>
+                <h1>Swap Result</h1>
+                <div class="meta-row">
+                    <span class="pill status {{ job.status }}">{{ job.status }}</span>
+                    <span class="pill">{{ job.created_at|date:"M d, Y H:i" }}</span>
+                </div>
+            </div>
+
+            <div class="actions">
+                {% if job.output_image %}
+                    <a class="button" href="{{ job.output_image.url }}" target="_blank" rel="noopener">Open Output</a>
+                    <a class="button secondary" href="{{ job.output_image.url }}" download>Download Output</a>
+                {% endif %}
+                <a class="button secondary" href="{% url 'faceswap:home' %}">New Swap</a>
+            </div>
+        </section>
+
+        {% if job.status == "pending" or job.status == "processing" %}
+            <div class="notice">Processing is running. This page refreshes every 5 seconds until the output is ready.</div>
+        {% endif %}
+
+        {% if job.error_message %}
+            <div class="error"><strong>Error:</strong> {{ job.error_message }}</div>
+        {% endif %}
+
+        {% if job.output_image %}
+            <section class="card compare-card">
+                <div class="compare-head">
+                    <div>
+                        <h2>Target vs Output</h2>
+                        <p class="placeholder" style="min-height:auto;padding:8px 0 0;text-align:left;">
+                            Drag the slider to compare the original target with the generated face swap.
+                        </p>
+                    </div>
+                </div>
+                <div class="compare" id="compareBox">
+                    <img src="{{ job.target_image.url }}" alt="Target image">
+                    <div class="compare-output" id="compareOutput">
+                        <img src="{{ job.output_image.url }}" alt="Output image">
+                    </div>
+                    <div class="compare-labels">
+                        <span>Output</span>
+                        <span>Target</span>
+                    </div>
+                </div>
+                <input class="compare-range" id="compareRange" type="range" min="0" max="100" value="50" aria-label="Compare output and target">
+            </section>
+        {% endif %}
+
+        <section class="comparison">
+            <article class="card">
+                <h2>Source</h2>
+                <div class="image-frame">
+                    <img src="{{ job.source_image.url }}" alt="Source image">
+                </div>
+            </article>
+
+            <article class="card">
+                <h2>Target</h2>
+                <div class="image-frame">
+                    <img src="{{ job.target_image.url }}" alt="Target image">
+                </div>
+            </article>
+
+            <article class="card">
+                <h2>Output</h2>
+                <div class="image-frame">
+                    {% if job.output_image %}
+                        <img src="{{ job.output_image.url }}" alt="Output image">
+                    {% else %}
+                        <div class="placeholder">Output will appear here after processing completes.</div>
+                    {% endif %}
+                </div>
+            </article>
+        </section>
+
+        {% if job.metadata.validation_issues %}
+            <div class="notice">
+                Validation notes: {{ job.metadata.validation_issues|join:", " }}
+            </div>
+        {% endif %}
+    </main>
+
+    {% if job.status == "pending" or job.status == "processing" %}
+        <script>
+            window.setTimeout(function () {
+                window.location.reload();
+            }, 5000);
+        </script>
+    {% endif %}
+    {% if job.output_image %}
+        <script>
+            const compareRange = document.getElementById("compareRange");
+            const compareBox = document.getElementById("compareBox");
+            const compareOutput = document.getElementById("compareOutput");
+
+            if (compareRange && compareBox && compareOutput) {
+                compareRange.addEventListener("input", () => {
+                    compareBox.style.setProperty("--split", compareRange.value + "%");
+                });
+            }
+        </script>
+    {% endif %}
+</body>
+</html>
